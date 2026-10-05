@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voxpilot/screens/dashboard_screen.dart';
+import 'package:voxpilot/screens/main_shell.dart';
 
 void main() {
   runApp(const VoxPilotApp());
@@ -23,7 +23,7 @@ class VoxPilotApp extends StatelessWidget {
       theme: ThemeData(useMaterial3: true, colorScheme: colorScheme),
       darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
       themeMode: ThemeMode.light,
-      home: const DashboardScreen(),
+      home: const MainShell(),
     );
   }
 }
