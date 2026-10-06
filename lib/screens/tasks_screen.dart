@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:voxpilot/models/task_model.dart';
+import 'package:voxpilot/services/task_storage_service.dart';
 import 'package:voxpilot/widgets/task_card.dart';
 import 'package:voxpilot/widgets/add_task_dialog.dart';
 
 // ---------------------------------------------------------------------------
-// Data
+// Data wrapper — attaches a display category to each Task
 // ---------------------------------------------------------------------------
 
 class _TaskItem {
@@ -12,6 +13,133 @@ class _TaskItem {
   final String category;
   _TaskItem({required this.task, required this.category});
 }
+
+// ---------------------------------------------------------------------------
+// Default seed data — shown only on first launch (storage is empty)
+// ---------------------------------------------------------------------------
+
+List<_TaskItem> _defaultItems() => [
+  _TaskItem(
+    task: Task(
+      id: 't1',
+      title: 'Refactor auth module',
+      description: 'Clean up JWT token validation and refresh logic',
+      time: '9:00 AM',
+      priority: TaskPriority.high,
+      status: TaskStatus.pending,
+      createdAt: DateTime(2026, 10, 5, 8, 0),
+    ),
+    category: 'Work',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't2',
+      title: 'Read Clean Code chapter 5',
+      description: 'Book study session — formatting and naming conventions',
+      time: '11:00 AM',
+      priority: TaskPriority.medium,
+      status: TaskStatus.inProgress,
+      createdAt: DateTime(2026, 10, 5, 7, 30),
+    ),
+    category: 'Learning',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't3',
+      title: 'Grocery shopping',
+      description: 'Weekly groceries — check the list in Notes',
+      time: '1:00 PM',
+      priority: TaskPriority.low,
+      status: TaskStatus.completed,
+      createdAt: DateTime(2026, 10, 4, 18, 0),
+    ),
+    category: 'Personal',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't4',
+      title: 'Write API documentation',
+      description: 'Document all REST endpoints for the v2 release',
+      time: '2:00 PM',
+      priority: TaskPriority.medium,
+      status: TaskStatus.pending,
+      createdAt: DateTime(2026, 10, 5, 9, 0),
+    ),
+    category: 'Work',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't5',
+      title: 'Morning workout',
+      description: '30 min cardio + stretching',
+      time: '7:00 AM',
+      priority: TaskPriority.low,
+      status: TaskStatus.completed,
+      createdAt: DateTime(2026, 10, 5, 6, 0),
+    ),
+    category: 'Personal',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't6',
+      title: 'Review Flutter PR #88',
+      description: 'Check UI changes and leave review comments',
+      time: '3:00 PM',
+      priority: TaskPriority.high,
+      status: TaskStatus.inProgress,
+      createdAt: DateTime(2026, 10, 5, 10, 0),
+    ),
+    category: 'Work',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't7',
+      title: 'Study state management',
+      description: 'Riverpod deep dive — providers and notifiers',
+      time: '5:00 PM',
+      priority: TaskPriority.medium,
+      status: TaskStatus.pending,
+      createdAt: DateTime(2026, 10, 5, 11, 0),
+    ),
+    category: 'Learning',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't8',
+      title: 'Call dentist',
+      description: 'Schedule bi-annual appointment',
+      time: '10:00 AM',
+      priority: TaskPriority.low,
+      status: TaskStatus.completed,
+      createdAt: DateTime(2026, 10, 4, 9, 0),
+    ),
+    category: 'Personal',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't9',
+      title: 'Set up CI/CD pipeline',
+      description: 'Configure GitHub Actions for automated deployments',
+      time: '4:00 PM',
+      priority: TaskPriority.high,
+      status: TaskStatus.inProgress,
+      createdAt: DateTime(2026, 10, 5, 13, 0),
+    ),
+    category: 'Work',
+  ),
+  _TaskItem(
+    task: Task(
+      id: 't10',
+      title: 'Watch Flutter Forward talks',
+      description: 'Review session recordings on new rendering engine',
+      time: '6:00 PM',
+      priority: TaskPriority.low,
+      status: TaskStatus.pending,
+      createdAt: DateTime(2026, 10, 5, 15, 0),
+    ),
+    category: 'Learning',
+  ),
+];
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -28,133 +156,16 @@ class _TasksScreenState extends State<TasksScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  String? _activeCategory; // null = all categories
-  TaskStatus? _activeStatus; // null = all statuses
+  String? _activeCategory;
+  TaskStatus? _activeStatus;
 
   static const List<String> _categories = ['Work', 'Learning', 'Personal'];
 
-  final List<_TaskItem> _items = [
-    _TaskItem(
-      task: Task(
-        id: 't1',
-        title: 'Refactor auth module',
-        description: 'Clean up JWT token validation and refresh logic',
-        time: '9:00 AM',
-        priority: TaskPriority.high,
-        status: TaskStatus.pending,
-        createdAt: DateTime(2026, 10, 5, 8, 0),
-      ),
-      category: 'Work',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't2',
-        title: 'Read Clean Code chapter 5',
-        description: 'Book study session — formatting and naming conventions',
-        time: '11:00 AM',
-        priority: TaskPriority.medium,
-        status: TaskStatus.inProgress,
-        createdAt: DateTime(2026, 10, 5, 7, 30),
-      ),
-      category: 'Learning',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't3',
-        title: 'Grocery shopping',
-        description: 'Weekly groceries — check the list in Notes',
-        time: '1:00 PM',
-        priority: TaskPriority.low,
-        status: TaskStatus.completed,
-        createdAt: DateTime(2026, 10, 4, 18, 0),
-      ),
-      category: 'Personal',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't4',
-        title: 'Write API documentation',
-        description: 'Document all REST endpoints for the v2 release',
-        time: '2:00 PM',
-        priority: TaskPriority.medium,
-        status: TaskStatus.pending,
-        createdAt: DateTime(2026, 10, 5, 9, 0),
-      ),
-      category: 'Work',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't5',
-        title: 'Morning workout',
-        description: '30 min cardio + stretching',
-        time: '7:00 AM',
-        priority: TaskPriority.low,
-        status: TaskStatus.completed,
-        createdAt: DateTime(2026, 10, 5, 6, 0),
-      ),
-      category: 'Personal',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't6',
-        title: 'Review Flutter PR #88',
-        description: 'Check UI changes and leave review comments',
-        time: '3:00 PM',
-        priority: TaskPriority.high,
-        status: TaskStatus.inProgress,
-        createdAt: DateTime(2026, 10, 5, 10, 0),
-      ),
-      category: 'Work',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't7',
-        title: 'Study state management',
-        description: 'Riverpod deep dive — providers and notifiers',
-        time: '5:00 PM',
-        priority: TaskPriority.medium,
-        status: TaskStatus.pending,
-        createdAt: DateTime(2026, 10, 5, 11, 0),
-      ),
-      category: 'Learning',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't8',
-        title: 'Call dentist',
-        description: 'Schedule bi-annual appointment',
-        time: '10:00 AM',
-        priority: TaskPriority.low,
-        status: TaskStatus.completed,
-        createdAt: DateTime(2026, 10, 4, 9, 0),
-      ),
-      category: 'Personal',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't9',
-        title: 'Set up CI/CD pipeline',
-        description: 'Configure GitHub Actions for automated deployments',
-        time: '4:00 PM',
-        priority: TaskPriority.high,
-        status: TaskStatus.inProgress,
-        createdAt: DateTime(2026, 10, 5, 13, 0),
-      ),
-      category: 'Work',
-    ),
-    _TaskItem(
-      task: Task(
-        id: 't10',
-        title: 'Watch Flutter Forward talks',
-        description: 'Review session recordings on new rendering engine',
-        time: '6:00 PM',
-        priority: TaskPriority.low,
-        status: TaskStatus.pending,
-        createdAt: DateTime(2026, 10, 5, 15, 0),
-      ),
-      category: 'Learning',
-    ),
-  ];
+  // Mutable task list — populated from storage in initState
+  List<_TaskItem> _items = [];
+  bool _loading = true;
+
+  final _storage = TaskStorageService.instance;
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -164,6 +175,7 @@ class _TasksScreenState extends State<TasksScreen> {
     _searchController.addListener(
       () => setState(() => _searchQuery = _searchController.text),
     );
+    _loadTasks();
   }
 
   @override
@@ -172,12 +184,35 @@ class _TasksScreenState extends State<TasksScreen> {
     super.dispose();
   }
 
+  // ── Persistence ───────────────────────────────────────────────────────────
+
+  Future<void> _loadTasks() async {
+    final saved = await _storage.loadItems();
+    if (!mounted) return;
+    setState(() {
+      if (saved.isEmpty) {
+        _items = _defaultItems();
+      } else {
+        _items = saved
+            .map((r) => _TaskItem(task: r.task, category: r.category))
+            .toList();
+      }
+      _loading = false;
+    });
+    if (saved.isEmpty) await _persistAll();
+  }
+
+  /// Persists current _items after every mutation.
+  Future<void> _persistAll() async {
+    await _storage.saveItems(
+      _items.map((i) => (task: i.task, category: i.category)).toList(),
+    );
+  }
+
   // ── Filtering ─────────────────────────────────────────────────────────────
 
-  /// All items matching the current search query + category + status filters.
   List<_TaskItem> get _filtered => _applyFilters(_activeStatus);
 
-  /// Count of items matching a specific [status] (plus search + category).
   int _countFor(TaskStatus? status) => _applyFilters(status).length;
 
   List<_TaskItem> _applyFilters(TaskStatus? status) {
@@ -198,12 +233,14 @@ class _TasksScreenState extends State<TasksScreen> {
 
   void _toggleTask(String id) {
     setState(() => _items.firstWhere((i) => i.task.id == id).task.toggleDone());
+    _persistAll();
   }
 
   void _changeStatus(String id, TaskStatus newStatus) {
     setState(
       () => _items.firstWhere((i) => i.task.id == id).task.status = newStatus,
     );
+    _persistAll();
   }
 
   Future<void> _deleteTask(String id) async {
@@ -238,6 +275,7 @@ class _TasksScreenState extends State<TasksScreen> {
     );
     if (confirmed != true) return;
     setState(() => _items.removeWhere((i) => i.task.id == id));
+    await _persistAll();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -270,6 +308,7 @@ class _TasksScreenState extends State<TasksScreen> {
         ),
       );
     });
+    await _persistAll();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -285,6 +324,13 @@ class _TasksScreenState extends State<TasksScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
+    if (_loading) {
+      return Scaffold(
+        backgroundColor: cs.surface,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -309,7 +355,6 @@ class _TasksScreenState extends State<TasksScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Search field ─────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                 child: TextField(
@@ -336,7 +381,6 @@ class _TasksScreenState extends State<TasksScreen> {
                   ),
                 ),
               ),
-              // ── Filter chips ─────────────────────────────────────────
               _FilterChipRow(
                 categories: _categories,
                 activeCategory: _activeCategory,
@@ -368,7 +412,7 @@ class _TasksScreenState extends State<TasksScreen> {
 }
 
 // ---------------------------------------------------------------------------
-// Filter chip row — status (All/Pending/In Progress/Completed) + categories
+// Filter chip row
 // ---------------------------------------------------------------------------
 
 class _FilterChipRow extends StatelessWidget {
@@ -392,7 +436,6 @@ class _FilterChipRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // Status filter definitions: (TaskStatus?, label, icon)
     const statusFilters = [
       (null, 'All', Icons.all_inbox_rounded),
       (TaskStatus.pending, 'Pending', Icons.radio_button_unchecked),
@@ -400,7 +443,6 @@ class _FilterChipRow extends StatelessWidget {
       (TaskStatus.completed, 'Completed', Icons.check_circle_outline),
     ];
 
-    // Category colors
     const categoryColors = {
       'Work': Colors.indigo,
       'Learning': Colors.purple,
@@ -412,14 +454,12 @@ class _FilterChipRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          // ── Status filter chips ───────────────────────────────────────
           ...statusFilters.map((entry) {
             final status = entry.$1;
             final label = entry.$2;
             final icon = entry.$3;
             final count = countFor(status);
             final selected = activeStatus == status;
-
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
@@ -443,20 +483,15 @@ class _FilterChipRow extends StatelessWidget {
               ),
             );
           }),
-
-          // ── Divider ───────────────────────────────────────────────────
           Container(
             width: 1,
             height: 24,
             margin: const EdgeInsets.only(right: 8),
             color: cs.outlineVariant,
           ),
-
-          // ── Category chips ────────────────────────────────────────────
           ...categories.map((cat) {
             final selected = activeCategory == cat;
             final color = categoryColors[cat] ?? Colors.blueGrey;
-
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(

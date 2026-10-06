@@ -127,4 +127,26 @@ class Task {
       createdAt: createdAt ?? this.createdAt,
     );
   }
+
+  // ── Serialisation ──────────────────────────────────────────────────────────
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'time': time,
+    'priority': priority.index,
+    'status': status.index,
+    'createdAt': createdAt.toIso8601String(),
+  };
+
+  factory Task.fromJson(Map<String, dynamic> json) => Task(
+    id: json['id'] as String,
+    title: json['title'] as String,
+    description: json['description'] as String,
+    time: json['time'] as String,
+    priority: TaskPriority.values[json['priority'] as int],
+    status: TaskStatus.values[json['status'] as int],
+    createdAt: DateTime.parse(json['createdAt'] as String),
+  );
 }
