@@ -14,29 +14,35 @@ class TodaysTasksSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text(
-              "Today's Tasks",
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+            Text("Today's Tasks", style: theme.textTheme.titleMedium),
+            const Spacer(),
+            TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'See All',
+                style: theme.textTheme.labelMedium?.copyWith(color: cs.primary),
               ),
             ),
-            const Spacer(),
-            TextButton(onPressed: () {}, child: const Text('See All')),
           ],
         ),
-        const SizedBox(height: 8),
-        Column(
-          children: tasks
-              .map(
-                (task) => _TaskCard(task: task, onTap: () => onToggle(task.id)),
-              )
-              .toList(),
+        const SizedBox(height: 10),
+        ...tasks.map(
+          (task) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _TaskCard(task: task, onTap: () => onToggle(task.id)),
+          ),
         ),
       ],
     );
@@ -51,48 +57,71 @@ class _TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: task.isDone ? 0.6 : 1.0,
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDone = task.isDone;
+
+    return AnimatedOpacity(
+      opacity: isDone ? 0.55 : 1.0,
+      duration: const Duration(milliseconds: 200),
       child: Card(
-        elevation: 1,
-        margin: const EdgeInsets.only(bottom: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        // Inherits CardTheme: elevation-0, radius-16, surfaceContainerLow
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: isDone
+                ? cs.outlineVariant.withValues(alpha: 0.3)
+                : cs.outlineVariant.withValues(alpha: 0.7),
+          ),
+        ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             child: Row(
               children: [
-                Checkbox(
-                  value: task.isDone,
-                  onChanged: (_) => onTap(),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
+                // Checkbox
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: isDone,
+                    onChanged: (_) => onTap(),
+                    shape: const CircleBorder(),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
+                const SizedBox(width: 10),
+                // Title + description
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 200),
-                        style: TextStyle(
+                        style: theme.textTheme.bodyMedium!.copyWith(
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          decoration: task.isDone
+                          decoration: isDone
                               ? TextDecoration.lineThrough
                               : TextDecoration.none,
-                          color: task.isDone ? Colors.grey : Colors.black87,
+                          decorationColor: cs.onSurface.withValues(alpha: 0.4),
+                          color: isDone
+                              ? cs.onSurface.withValues(alpha: 0.4)
+                              : cs.onSurface,
                         ),
-                        child: Text(task.title),
+                        child: Text(
+                          task.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         task.description,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurface.withValues(alpha: 0.5),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -100,6 +129,8 @@ class _TaskCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 10),
+                // Priority badge + time
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
@@ -110,25 +141,34 @@ class _TaskCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: task.priority.color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        color: task.priority.color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
                         task.priority.label,
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: task.priority.color,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      task.time,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 11,
+                          color: cs.onSurface.withValues(alpha: 0.4),
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          task.time,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: cs.onSurface.withValues(alpha: 0.45),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

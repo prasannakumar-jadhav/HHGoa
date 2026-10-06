@@ -5,16 +5,15 @@ class WelcomeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final now = DateTime.now();
 
-    String greeting;
-    if (now.hour >= 5 && now.hour <= 11) {
-      greeting = 'Good morning';
-    } else if (now.hour >= 12 && now.hour <= 16) {
-      greeting = 'Good afternoon';
-    } else {
-      greeting = 'Good evening';
-    }
+    final greeting = switch (now.hour) {
+      >= 5 && <= 11 => 'Good morning',
+      >= 12 && <= 16 => 'Good afternoon',
+      _ => 'Good evening',
+    };
 
     const weekdays = [
       'Monday',
@@ -39,76 +38,78 @@ class WelcomeBanner extends StatelessWidget {
       'November',
       'December',
     ];
-
-    final weekday = weekdays[now.weekday - 1];
-    final month = months[now.month - 1];
-    final dateStr = '$weekday, $month ${now.day}';
+    final dateStr =
+        '${weekdays[now.weekday - 1]}, ${months[now.month - 1]} ${now.day}';
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A237E), Color(0xFF3949AB)],
+        gradient: LinearGradient(
+          colors: [cs.primary, cs.tertiary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
       child: Stack(
+        clipBehavior: Clip.hardEdge,
         children: [
+          // Decorative circles — purely cosmetic
           Positioned(
-            right: -20,
-            top: -20,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.1),
-              ),
-            ),
+            right: -24,
+            top: -24,
+            child: _Circle(size: 120, opacity: 0.10),
           ),
           Positioned(
-            right: 30,
-            bottom: -30,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
+            right: 40,
+            bottom: -36,
+            child: _Circle(size: 80, opacity: 0.07),
           ),
+          // Content
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 '$greeting, Developer 👋',
-                style: const TextStyle(
+                style: theme.textTheme.titleLarge?.copyWith(
                   color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 dateStr,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.75),
+                ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+                  horizontal: 14,
+                  vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  "You have 6 tasks today. Let's get it done! 🚀",
-                  style: TextStyle(color: Colors.white, fontSize: 13),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.rocket_launch_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "You have 6 tasks today. Let's get it done!",
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -117,4 +118,20 @@ class WelcomeBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+class _Circle extends StatelessWidget {
+  final double size;
+  final double opacity;
+  const _Circle({required this.size, required this.opacity});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.white.withValues(alpha: opacity),
+    ),
+  );
 }

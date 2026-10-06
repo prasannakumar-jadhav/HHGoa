@@ -3,11 +3,12 @@ import 'package:voxpilot/models/task_model.dart';
 
 class StatsRow extends StatelessWidget {
   final List<Task> tasks;
-
   const StatsRow({super.key, required this.tasks});
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     final total = tasks.length;
     final completed = tasks
         .where((t) => t.status == TaskStatus.completed)
@@ -23,8 +24,8 @@ class StatsRow extends StatelessWidget {
           child: _StatCard(
             label: 'Total',
             value: total,
-            icon: Icons.task_alt,
-            color: Colors.indigo,
+            icon: Icons.format_list_bulleted_rounded,
+            color: cs.primary,
           ),
         ),
         const SizedBox(width: 10),
@@ -32,8 +33,8 @@ class StatsRow extends StatelessWidget {
           child: _StatCard(
             label: 'Done',
             value: completed,
-            icon: Icons.check_circle_outline,
-            color: Colors.green,
+            icon: Icons.check_circle_rounded,
+            color: Colors.green.shade600,
           ),
         ),
         const SizedBox(width: 10),
@@ -41,8 +42,8 @@ class StatsRow extends StatelessWidget {
           child: _StatCard(
             label: 'Active',
             value: inProgress,
-            icon: Icons.timelapse,
-            color: Colors.orange,
+            icon: Icons.timelapse_rounded,
+            color: cs.secondary,
           ),
         ),
         const SizedBox(width: 10),
@@ -50,8 +51,8 @@ class StatsRow extends StatelessWidget {
           child: _StatCard(
             label: 'Pending',
             value: pending,
-            icon: Icons.pending_outlined,
-            color: Colors.red,
+            icon: Icons.hourglass_empty_rounded,
+            color: Colors.orange.shade600,
           ),
         ),
       ],
@@ -74,31 +75,40 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     return Card(
-      elevation: 0,
-      color: color.withValues(alpha: 0.12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      // Inherits CardTheme: elevation-0, radius-16, surfaceContainerLow
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 8),
             Text(
-              value.toString(),
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: color,
+              '$value',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: cs.onSurface,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: cs.onSurface.withValues(alpha: 0.55),
+              ),
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 1,
             ),
           ],
         ),

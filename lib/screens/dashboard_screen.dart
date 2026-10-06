@@ -71,52 +71,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
   ];
 
   void _toggleTask(String id) {
-    setState(() {
-      final task = _tasks.firstWhere((t) => t.id == id);
-      task.toggleDone();
-    });
+    setState(() => _tasks.firstWhere((t) => t.id == id).toggleDone());
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: cs.surface,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
-        icon: const Icon(Icons.mic),
+        icon: const Icon(Icons.mic_rounded),
         label: const Text('Add Task'),
       ),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
+            // ── App bar ─────────────────────────────────────────────────
             SliverAppBar(
-              expandedHeight: 0,
               floating: true,
               snap: true,
               pinned: false,
-              backgroundColor: theme.colorScheme.primaryContainer,
+              backgroundColor: cs.primaryContainer,
+              surfaceTintColor: Colors.transparent,
               elevation: 0,
+              titleSpacing: 16,
               title: Row(
                 children: [
-                  Icon(Icons.mic, color: theme.colorScheme.onPrimaryContainer),
-                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.mic_rounded,
+                      color: cs.onPrimaryContainer,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'VoxPilot',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onPrimaryContainer,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: cs.onPrimaryContainer,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       Text(
                         'AI Developer Companion',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onPrimaryContainer
-                              .withValues(alpha: 0.8),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: cs.onPrimaryContainer.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -127,38 +138,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 IconButton(
                   icon: Icon(
                     Icons.notifications_outlined,
-                    color: theme.colorScheme.onPrimaryContainer,
+                    color: cs.onPrimaryContainer,
+                    size: 22,
                   ),
                   onPressed: () {},
+                  tooltip: 'Notifications',
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsets.only(right: 14),
                   child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: theme.colorScheme.primary,
-                    child: const Text(
+                    radius: 17,
+                    backgroundColor: cs.primary,
+                    child: Text(
                       'D',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: cs.onPrimary,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
                 ),
               ],
             ),
+            // ── Content ─────────────────────────────────────────────────
             SliverPadding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const WelcomeBanner(),
                   const SizedBox(height: 20),
                   StatsRow(tasks: _tasks),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   const QuickActionsCard(),
                   const SizedBox(height: 20),
                   TodaysTasksSection(tasks: _tasks, onToggle: _toggleTask),
-                  const SizedBox(height: 80),
+                  // Bottom padding for FAB clearance
+                  const SizedBox(height: 88),
                 ]),
               ),
             ),
