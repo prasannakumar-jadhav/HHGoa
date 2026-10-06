@@ -1,0 +1,7 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    "Stale index in Completed-tab toggle path — _buildTaskCard passes _items.indexOf(completedItems[index]) to _toggleTask when rendering the Completed tab. Currently dead code because completedOnly: true disables all checkboxes on that tab, but fragile: if the guard is removed the toggle will operate on the wrong task. Fix by having _toggleTask accept the _TaskItem object rather than an integer index."
+  ],
+  "reviewDoc": "d:\\FLUTTER\\Hackathon\\voxpilot\\.agents\\tasks\\nav-review.md"
+}

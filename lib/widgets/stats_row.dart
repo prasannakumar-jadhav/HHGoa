@@ -9,9 +9,13 @@ class StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = tasks.length;
-    final completed = tasks.where((t) => t.isDone).length;
-    const inProgress = 1;
-    final pending = (total - completed - inProgress).clamp(0, total);
+    final completed = tasks
+        .where((t) => t.status == TaskStatus.completed)
+        .length;
+    final inProgress = tasks
+        .where((t) => t.status == TaskStatus.inProgress)
+        .length;
+    final pending = tasks.where((t) => t.status == TaskStatus.pending).length;
 
     return Row(
       children: [

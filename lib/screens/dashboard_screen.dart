@@ -20,6 +20,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       description: 'Plan microservices layout',
       time: '9:00 AM',
       priority: TaskPriority.high,
+      status: TaskStatus.inProgress,
+      createdAt: DateTime(2026, 10, 5, 8, 45),
     ),
     Task(
       id: '2',
@@ -27,6 +29,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       description: 'Flutter dashboard PR',
       time: '10:30 AM',
       priority: TaskPriority.medium,
+      status: TaskStatus.pending,
+      createdAt: DateTime(2026, 10, 5, 9, 0),
     ),
     Task(
       id: '3',
@@ -34,6 +38,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       description: 'JWT token expiry issue',
       time: '12:00 PM',
       priority: TaskPriority.high,
+      status: TaskStatus.completed,
+      createdAt: DateTime(2026, 10, 4, 14, 0),
     ),
     Task(
       id: '4',
@@ -41,6 +47,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       description: 'Cover auth module',
       time: '2:00 PM',
       priority: TaskPriority.medium,
+      status: TaskStatus.pending,
+      createdAt: DateTime(2026, 10, 5, 10, 0),
     ),
     Task(
       id: '5',
@@ -48,6 +56,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       description: 'Swagger docs for v2',
       time: '3:30 PM',
       priority: TaskPriority.low,
+      status: TaskStatus.pending,
+      createdAt: DateTime(2026, 10, 5, 11, 0),
     ),
     Task(
       id: '6',
@@ -55,13 +65,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       description: 'Push release candidate',
       time: '5:00 PM',
       priority: TaskPriority.low,
+      status: TaskStatus.completed,
+      createdAt: DateTime(2026, 10, 4, 17, 0),
     ),
   ];
 
   void _toggleTask(String id) {
     setState(() {
       final task = _tasks.firstWhere((t) => t.id == id);
-      task.isDone = !task.isDone;
+      task.toggleDone();
     });
   }
 

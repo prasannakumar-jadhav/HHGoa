@@ -11,10 +11,7 @@ class InsightsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Insights'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.date_range),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.date_range), onPressed: () {}),
         ],
       ),
       body: SingleChildScrollView(
@@ -29,7 +26,6 @@ class InsightsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Container(
-                height: 120,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -40,7 +36,10 @@ class InsightsScreen extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 18,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -87,7 +86,7 @@ class InsightsScreen extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.4,
+              childAspectRatio: 1.6,
               children: [
                 _StatCard(
                   icon: Icons.check_circle_outline,
@@ -164,11 +163,7 @@ class InsightsScreen extends StatelessWidget {
                 dense: true,
                 leading: CircleAvatar(
                   backgroundColor: Colors.green.shade100,
-                  child: Icon(
-                    Icons.check,
-                    color: Colors.green,
-                    size: 18,
-                  ),
+                  child: Icon(Icons.check, color: Colors.green, size: 18),
                 ),
                 title: Text(entry.$1),
                 subtitle: Text(entry.$2),
@@ -222,12 +217,17 @@ class _StatCard extends StatelessWidget {
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           Text(
             label,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ],
       ),
