@@ -6,11 +6,13 @@ import 'package:voxpilot/models/task_model.dart';
 ///
 /// [onToggle] is called when the leading checkbox is tapped.
 /// [onStatusChanged] is optional — shows a status dropdown menu if provided.
+/// [onDelete] is optional — shows a trailing delete button when provided.
 class TaskCard extends StatelessWidget {
   final Task task;
   final String category;
   final VoidCallback? onToggle;
   final ValueChanged<TaskStatus>? onStatusChanged;
+  final VoidCallback? onDelete;
 
   const TaskCard({
     super.key,
@@ -18,6 +20,7 @@ class TaskCard extends StatelessWidget {
     required this.category,
     this.onToggle,
     this.onStatusChanged,
+    this.onDelete,
   });
 
   @override
@@ -38,9 +41,7 @@ class TaskCard extends StatelessWidget {
           width: 1,
         ),
       ),
-      color: isDone
-          ? cs.surfaceContainerLowest
-          : cs.surface,
+      color: isDone ? cs.surfaceContainerLowest : cs.surface,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -67,7 +68,7 @@ class TaskCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title + status menu
+                  // Title + status menu + delete
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -76,8 +77,9 @@ class TaskCard extends StatelessWidget {
                           task.title,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
-                            decoration:
-                                isDone ? TextDecoration.lineThrough : null,
+                            decoration: isDone
+                                ? TextDecoration.lineThrough
+                                : null,
                             color: isDone
                                 ? cs.onSurface.withValues(alpha: 0.45)
                                 : cs.onSurface,
@@ -89,6 +91,23 @@ class TaskCard extends StatelessWidget {
                         status: task.status,
                         onChanged: onStatusChanged,
                       ),
+                      if (onDelete != null) ...[
+                        const SizedBox(width: 4),
+                        SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            iconSize: 16,
+                            icon: Icon(
+                              Icons.delete_outline_rounded,
+                              color: cs.error.withValues(alpha: 0.7),
+                            ),
+                            tooltip: 'Delete task',
+                            onPressed: onDelete,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
 
@@ -257,17 +276,16 @@ class _TimeBadge extends StatelessWidget {
         Icon(
           Icons.access_time_rounded,
           size: 11,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
+          color: Theme.of(context).colorScheme.onSurface
+              .withValues(alpha: 0.45),
         ),
         const SizedBox(width: 3),
         Text(
           time,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.5),
-              ),
+            color: Theme.of(context).colorScheme.onSurface
+                .withValues(alpha: 0.5),
+          ),
         ),
       ],
     );

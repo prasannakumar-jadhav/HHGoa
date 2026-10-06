@@ -24,12 +24,12 @@ class TasksScreen extends StatefulWidget {
   State<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends State<TasksScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+class _TasksScreenState extends State<TasksScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
-  // Active category filter — null means "All"
-  String? _activeCategory;
+  String? _activeCategory; // null = all categories
+  TaskStatus? _activeStatus; // null = all statuses
 
   static const List<String> _categories = ['Work', 'Learning', 'Personal'];
 
@@ -156,52 +156,104 @@ class _TasksScreenState extends State<TasksScreen>
     ),
   ];
 
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _searchController.addListener(
+      () => setState(() => _searchQuery = _searchController.text),
+    );
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Filtering ─────────────────────────────────────────────────────────────
 
-  List<_TaskItem> _filtered(TaskStatus? statusFilter) {
+  /// All items matching the current search query + category + status filters.
+  List<_TaskItem> get _filtered => _applyFilters(_activeStatus);
+
+  /// Count of items matching a specific [status] (plus search + category).
+  int _countFor(TaskStatus? status) => _applyFilters(status).length;
+
+  List<_TaskItem> _applyFilters(TaskStatus? status) {
+    final query = _searchQuery.toLowerCase().trim();
     return _items.where((item) {
       final categoryMatch =
           _activeCategory == null || item.category == _activeCategory;
-      final statusMatch =
-          statusFilter == null || item.task.status == statusFilter;
-      return categoryMatch && statusMatch;
+      final statusMatch = status == null || item.task.status == status;
+      final searchMatch =
+          query.isEmpty ||
+          item.task.title.toLowerCase().contains(query) ||
+          item.task.description.toLowerCase().contains(query);
+      return categoryMatch && statusMatch && searchMatch;
     }).toList();
   }
 
+  // ── Actions ───────────────────────────────────────────────────────────────
+
   void _toggleTask(String id) {
-    setState(() {
-      _items.firstWhere((i) => i.task.id == id).task.toggleDone();
-    });
+    setState(() => _items.firstWhere((i) => i.task.id == id).task.toggleDone());
   }
 
   void _changeStatus(String id, TaskStatus newStatus) {
-    setState(() {
-      _items.firstWhere((i) => i.task.id == id).task.status = newStatus;
-    });
+    setState(
+      () => _items.firstWhere((i) => i.task.id == id).task.status = newStatus,
+    );
   }
 
-  void _openAddTaskDialog() async {
+  Future<void> _deleteTask(String id) async {
+    final item = _items.firstWhere((i) => i.task.id == id);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: Icon(
+          Icons.delete_outline_rounded,
+          color: Theme.of(ctx).colorScheme.error,
+          size: 32,
+        ),
+        title: const Text('Delete Task'),
+        content: Text(
+          'Are you sure you want to delete "${item.task.title}"?\nThis action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+              foregroundColor: Theme.of(ctx).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    setState(() => _items.removeWhere((i) => i.task.id == id));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('"${item.task.title}" deleted'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _openAddTaskDialog() async {
     final result = await showAddTaskDialog(context);
     if (result == null) return;
-
-    final hour = result.time.hour;
-    final minute = result.time.minute.toString().padLeft(2, '0');
-    final period = hour >= 12 ? 'PM' : 'AM';
-    final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-    final timeLabel = '$displayHour:$minute $period';
-
+    final h = result.time.hour;
+    final m = result.time.minute.toString().padLeft(2, '0');
+    final period = h >= 12 ? 'PM' : 'AM';
+    final displayH = h % 12 == 0 ? 12 : h % 12;
     setState(() {
       _items.add(
         _TaskItem(
@@ -209,7 +261,7 @@ class _TasksScreenState extends State<TasksScreen>
             id: 't${DateTime.now().millisecondsSinceEpoch}',
             title: result.title,
             description: result.description,
-            time: timeLabel,
+            time: '$displayH:$m $period',
             priority: result.priority,
             status: result.status,
             createdAt: DateTime.now(),
@@ -218,7 +270,6 @@ class _TasksScreenState extends State<TasksScreen>
         ),
       );
     });
-
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -229,10 +280,11 @@ class _TasksScreenState extends State<TasksScreen>
     );
   }
 
+  // ── Build ─────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -250,60 +302,61 @@ class _TasksScreenState extends State<TasksScreen>
             tooltip: 'Sort',
             onPressed: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
-            tooltip: 'Filter',
-            onPressed: () {},
-          ),
           const SizedBox(width: 4),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(96),
+          preferredSize: const Size.fromHeight(112),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category filter chips
-              _CategoryFilterRow(
-                categories: _categories,
-                active: _activeCategory,
-                onSelected: (cat) => setState(() => _activeCategory = cat),
+              // ── Search field ─────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: TextField(
+                  controller: _searchController,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Search by title or description…',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                            tooltip: 'Clear',
+                            onPressed: () => _searchController.clear(),
+                          )
+                        : null,
+                    isDense: true,
+                    filled: true,
+                    fillColor: cs.surfaceContainerLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
               ),
-              // Status tabs
-              TabBar(
-                controller: _tabController,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-                tabs: [
-                  _buildTab('All', null),
-                  _buildTab('In Progress', TaskStatus.inProgress),
-                  _buildTab('Completed', TaskStatus.completed),
-                ],
+              // ── Filter chips ─────────────────────────────────────────
+              _FilterChipRow(
+                categories: _categories,
+                activeCategory: _activeCategory,
+                activeStatus: _activeStatus,
+                onCategorySelected: (c) => setState(() => _activeCategory = c),
+                onStatusSelected: (s) => setState(() => _activeStatus = s),
+                countFor: _countFor,
               ),
             ],
           ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _TaskList(
-            items: _filtered(null),
-            onToggle: _toggleTask,
-            onStatusChanged: _changeStatus,
-            emptyMessage: 'No tasks yet.',
-          ),
-          _TaskList(
-            items: _filtered(TaskStatus.inProgress),
-            onToggle: _toggleTask,
-            onStatusChanged: _changeStatus,
-            emptyMessage: 'No tasks in progress.',
-          ),
-          _TaskList(
-            items: _filtered(TaskStatus.completed),
-            onToggle: _toggleTask,
-            onStatusChanged: _changeStatus,
-            emptyMessage: 'No completed tasks yet.',
-          ),
-        ],
+      body: _TaskList(
+        items: _filtered,
+        onToggle: _toggleTask,
+        onStatusChanged: _changeStatus,
+        onDelete: _deleteTask,
+        emptyMessage: _searchQuery.isNotEmpty
+            ? 'No tasks match "$_searchQuery".'
+            : 'No tasks found.',
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openAddTaskDialog,
@@ -312,81 +365,117 @@ class _TasksScreenState extends State<TasksScreen>
       ),
     );
   }
-
-  Tab _buildTab(String label, TaskStatus? status) {
-    final count = _filtered(status).length;
-    return Tab(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          const SizedBox(width: 6),
-          _CountBadge(count: count),
-        ],
-      ),
-    );
-  }
 }
 
 // ---------------------------------------------------------------------------
-// Category filter row
+// Filter chip row — status (All/Pending/In Progress/Completed) + categories
 // ---------------------------------------------------------------------------
 
-class _CategoryFilterRow extends StatelessWidget {
+class _FilterChipRow extends StatelessWidget {
   final List<String> categories;
-  final String? active;
-  final ValueChanged<String?> onSelected;
+  final String? activeCategory;
+  final TaskStatus? activeStatus;
+  final ValueChanged<String?> onCategorySelected;
+  final ValueChanged<TaskStatus?> onStatusSelected;
+  final int Function(TaskStatus?) countFor;
 
-  const _CategoryFilterRow({
+  const _FilterChipRow({
     required this.categories,
-    required this.active,
-    required this.onSelected,
+    required this.activeCategory,
+    required this.activeStatus,
+    required this.onCategorySelected,
+    required this.onStatusSelected,
+    required this.countFor,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
+    // Status filter definitions: (TaskStatus?, label, icon)
+    const statusFilters = [
+      (null, 'All', Icons.all_inbox_rounded),
+      (TaskStatus.pending, 'Pending', Icons.radio_button_unchecked),
+      (TaskStatus.inProgress, 'In Progress', Icons.timelapse),
+      (TaskStatus.completed, 'Completed', Icons.check_circle_outline),
+    ];
+
+    // Category colors
+    const categoryColors = {
+      'Work': Colors.indigo,
+      'Learning': Colors.purple,
+      'Personal': Colors.teal,
+    };
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          // "All" chip
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: const Text('All'),
-              selected: active == null,
-              onSelected: (_) => onSelected(null),
-              showCheckmark: false,
-              selectedColor: cs.primaryContainer,
-              labelStyle: TextStyle(
-                color: active == null ? cs.onPrimaryContainer : null,
-                fontWeight: active == null
-                    ? FontWeight.w600
-                    : FontWeight.normal,
-              ),
-            ),
-          ),
-          ...categories.map(
-            (cat) => Padding(
+          // ── Status filter chips ───────────────────────────────────────
+          ...statusFilters.map((entry) {
+            final status = entry.$1;
+            final label = entry.$2;
+            final icon = entry.$3;
+            final count = countFor(status);
+            final selected = activeStatus == status;
+
+            return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: FilterChip(
-                label: Text(cat),
-                selected: active == cat,
-                onSelected: (_) => onSelected(active == cat ? null : cat),
+                avatar: Icon(
+                  icon,
+                  size: 14,
+                  color: selected
+                      ? cs.onPrimaryContainer
+                      : cs.onSurface.withValues(alpha: 0.55),
+                ),
+                label: Text('$label  $count'),
+                selected: selected,
+                onSelected: (_) => onStatusSelected(selected ? null : status),
                 showCheckmark: false,
                 selectedColor: cs.primaryContainer,
                 labelStyle: TextStyle(
-                  color: active == cat ? cs.onPrimaryContainer : null,
-                  fontWeight: active == cat
-                      ? FontWeight.w600
-                      : FontWeight.normal,
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+                  color: selected ? cs.onPrimaryContainer : null,
                 ),
               ),
-            ),
+            );
+          }),
+
+          // ── Divider ───────────────────────────────────────────────────
+          Container(
+            width: 1,
+            height: 24,
+            margin: const EdgeInsets.only(right: 8),
+            color: cs.outlineVariant,
           ),
+
+          // ── Category chips ────────────────────────────────────────────
+          ...categories.map((cat) {
+            final selected = activeCategory == cat;
+            final color = categoryColors[cat] ?? Colors.blueGrey;
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(cat),
+                selected: selected,
+                onSelected: (_) => onCategorySelected(selected ? null : cat),
+                showCheckmark: false,
+                selectedColor: Color.alphaBlend(
+                  (color as Color).withValues(alpha: 0.25),
+                  cs.surface,
+                ),
+                labelStyle: TextStyle(
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+                  color: selected ? color : null,
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -401,12 +490,14 @@ class _TaskList extends StatelessWidget {
   final List<_TaskItem> items;
   final ValueChanged<String> onToggle;
   final void Function(String id, TaskStatus status) onStatusChanged;
+  final void Function(String id) onDelete;
   final String emptyMessage;
 
   const _TaskList({
     required this.items,
     required this.onToggle,
     required this.onStatusChanged,
+    required this.onDelete,
     required this.emptyMessage,
   });
 
@@ -418,7 +509,7 @@ class _TaskList extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.check_circle_outline_rounded,
+              Icons.search_off_rounded,
               size: 56,
               color: Theme.of(context).colorScheme.onSurface
                   .withValues(alpha: 0.2),
@@ -430,6 +521,7 @@ class _TaskList extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurface
                     .withValues(alpha: 0.45),
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -446,37 +538,9 @@ class _TaskList extends StatelessWidget {
           category: item.category,
           onToggle: () => onToggle(item.task.id),
           onStatusChanged: (s) => onStatusChanged(item.task.id, s),
+          onDelete: () => onDelete(item.task.id),
         );
       },
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Count badge
-// ---------------------------------------------------------------------------
-
-class _CountBadge extends StatelessWidget {
-  final int count;
-  const _CountBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-        color: cs.secondaryContainer,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        '$count',
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: cs.onSecondaryContainer,
-        ),
-      ),
     );
   }
 }
