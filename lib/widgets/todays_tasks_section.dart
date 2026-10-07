@@ -4,11 +4,13 @@ import 'package:voxpilot/models/task_model.dart';
 class TodaysTasksSection extends StatelessWidget {
   final List<Task> tasks;
   final void Function(String taskId) onToggle;
+  final VoidCallback? onSeeAll;
 
   const TodaysTasksSection({
     super.key,
     required this.tasks,
     required this.onToggle,
+    this.onSeeAll,
   });
 
   @override
@@ -24,7 +26,7 @@ class TodaysTasksSection extends StatelessWidget {
             Text("Today's Tasks", style: theme.textTheme.titleMedium),
             const Spacer(),
             TextButton(
-              onPressed: () {},
+              onPressed: onSeeAll,
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: Size.zero,

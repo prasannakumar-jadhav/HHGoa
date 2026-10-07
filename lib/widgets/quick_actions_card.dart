@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 
 class QuickActionsCard extends StatelessWidget {
-  const QuickActionsCard({super.key});
+  final VoidCallback? onNewTask;
+  final VoidCallback? onVoice;
+  final VoidCallback? onAiAssist;
+  final VoidCallback? onAnalytics;
+
+  const QuickActionsCard({
+    super.key,
+    this.onNewTask,
+    this.onVoice,
+    this.onAiAssist,
+    this.onAnalytics,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -9,7 +20,6 @@ class QuickActionsCard extends StatelessWidget {
     final cs = theme.colorScheme;
 
     return Card(
-      // Inherits CardTheme: elevation-0, radius-16, surfaceContainerLow
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
         child: Column(
@@ -25,26 +35,30 @@ class QuickActionsCard extends StatelessWidget {
             const SizedBox(height: 14),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
+              children: [
                 _ActionButton(
                   icon: Icons.add_task_rounded,
                   label: 'New Task',
                   color: Colors.indigo,
+                  onTap: onNewTask,
                 ),
                 _ActionButton(
                   icon: Icons.mic_rounded,
                   label: 'Voice',
                   color: Colors.purple,
+                  onTap: onVoice,
                 ),
                 _ActionButton(
                   icon: Icons.auto_awesome_rounded,
                   label: 'AI Assist',
                   color: Colors.teal,
+                  onTap: onAiAssist,
                 ),
                 _ActionButton(
                   icon: Icons.bar_chart_rounded,
                   label: 'Analytics',
                   color: Colors.orange,
+                  onTap: onAnalytics,
                 ),
               ],
             ),
@@ -59,11 +73,13 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final VoidCallback? onTap;
 
   const _ActionButton({
     required this.icon,
     required this.label,
     required this.color,
+    this.onTap,
   });
 
   @override
@@ -79,7 +95,7 @@ class _ActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
-            onTap: () {},
+            onTap: onTap,
             child: Padding(
               padding: const EdgeInsets.all(13),
               child: Icon(icon, color: color, size: 22),

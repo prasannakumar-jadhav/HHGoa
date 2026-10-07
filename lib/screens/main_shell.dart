@@ -18,10 +18,13 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
-        children: const [
-          DashboardScreen(),
-          TasksScreen(),
-          InsightsScreen(),
+        children: [
+          DashboardScreen(
+            onNavigateToTasks: () => setState(() => _selectedIndex = 1),
+            onNavigateToInsights: () => setState(() => _selectedIndex = 2),
+          ),
+          const TasksScreen(),
+          const InsightsScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(

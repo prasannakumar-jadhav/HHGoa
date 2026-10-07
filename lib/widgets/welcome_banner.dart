@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 class WelcomeBanner extends StatelessWidget {
-  const WelcomeBanner({super.key});
+  /// Number of non-completed tasks today — drives the tagline.
+  final int pendingCount;
+
+  const WelcomeBanner({super.key, this.pendingCount = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +107,9 @@ class WelcomeBanner extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      "You have 6 tasks today. Let's get it done!",
+                      pendingCount == 0
+                          ? "You're all caught up today! 🎉"
+                          : "You have $pendingCount task${pendingCount == 1 ? '' : 's'} today. Let's get it done!",
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: Colors.white,
                       ),
