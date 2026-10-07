@@ -21,6 +21,19 @@ version: 1.0.0+1
 environment:
   sdk: ^3.13.5
 
+# ── App icon config ────────────────────────────────────────────────────────
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/voxpilot_logo_icon.png"
+  adaptive_icon_background: "#1A237E"
+  adaptive_icon_foreground: "assets/icons/voxpilot_logo_icon.png"
+  min_sdk_android: 21
+  web:
+    generate: false
+  windows:
+    generate: false
+
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -33,6 +46,7 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.3.5
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -44,6 +58,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -55,6 +70,11 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/background.jpg
+    - assets/icons/voxpilot_logo.svg
+    - assets/icons/voxpilot_logo_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:
